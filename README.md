@@ -9,7 +9,7 @@
 
 - **换行自动加逗号**：同一段落中每遇到一次换行都会插入中文逗号“，”。
 - **空行分组**：以空行为分隔，将文案划分为独立的文案单元。
-- **模板写入**：使用固定的 Excel 模板，只填充第一列，其余格式保持不变。
+- **模板写入**：选择任意 Excel 模板，只填充第一列，其余格式保持不变。
 - **GUI/CLI 双模式**：既可双击运行图形界面，也支持脚本化处理。
 
 ## 环境准备
@@ -21,39 +21,33 @@
    pip install openpyxl
    ```
 
-工具内置了一个简单的 Excel 模板，会在第一次运行时自动生成到
-`templates/txt_to_excel_template.xlsx`，也可以直接替换成自定义模板。
-
 ## 图形界面使用方法
 
 1. 双击或通过命令 `python txt_to_excel_tool.py --gui` 启动图形界面。
-2. 在界面中依次选择 TXT 文案文件、Excel 模板（默认为仓库模板）和输出
-   Excel 文件保存位置。
-3. 点击“开始转换”，程序会按照规则生成结果并提示写入的文案条数。
+2. 在界面中依次选择 TXT 文案文件与 Excel 模板。
+3. 点击“开始转换”，程序会按照规则生成结果并将文案直接写入所选模板
+   的第一列（从第二行开始）。
 
 ## 命令行使用方法
 
 在命令行中执行：
 
 ```bash
-python txt_to_excel_tool.py --txt 输入.txt --output 输出.xlsx
+python txt_to_excel_tool.py --txt 输入.txt --template 模板.xlsx
 ```
 
 可选参数：
 
-- `--template`：指定自定义的 Excel 模板路径，默认使用仓库内置模板。
 - `--start-row`：设置写入 Excel 的起始行（默认为 2）。
 
 示例：
 
 ```bash
-python txt_to_excel_tool.py --txt data/sample.txt \
-    --template templates/txt_to_excel_template.xlsx \
-    --output dist/result.xlsx
+python txt_to_excel_tool.py --txt data/sample.txt --template 我的模板.xlsx
 ```
 
-执行完成后，处理后的每个文案单元都会放在 Excel 的第一列中，行内
-换行被中文逗号替换，空行则作为文案分隔。
+执行完成后，处理后的每个文案单元都会覆盖写入 Excel 模板的第一列，
+行内换行被中文逗号替换，空行则作为文案分隔。
 
 ## 文案处理规则回顾
 

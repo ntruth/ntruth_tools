@@ -24,10 +24,7 @@ except ModuleNotFoundError:  # pragma: no cover - 延迟到运行时报错
     load_workbook = None  # type: ignore
 
 
-from templates import DEFAULT_TEMPLATE_FILENAME, ensure_default_template_file
-
 CHINESE_COMMA = "，"
-DEFAULT_TEMPLATE = Path(__file__).with_name("templates").joinpath(DEFAULT_TEMPLATE_FILENAME)
 
 
 def extract_units(lines: Iterable[str]) -> list[str]:
@@ -58,9 +55,7 @@ def extract_units(lines: Iterable[str]) -> list[str]:
     return units
 
 
-def convert_txt_to_excel(
-    txt_path: Path, template_path: Path, output_path: Path, *, start_row: int = 2
-) -> int:
+def convert_txt_to_excel(txt_path: Path, template_path: Path, *, start_row: int = 2) -> int:
     """将 TXT 文案转换并写入 Excel。
 
     返回写入的文案单元数量。
@@ -91,27 +86,21 @@ def convert_txt_to_excel(
         sheet.cell(row=row_index, column=1).value = unit
         row_index += 1
 
-    workbook.save(output_path)
+    workbook.save(template_path)
     return len(units)
 
 
 def run_cli(args: argparse.Namespace) -> None:
     txt_path = Path(args.txt)
-    if args.template:
-        template_path = Path(args.template)
-    else:
-        template_path = ensure_default_template_file(DEFAULT_TEMPLATE)
-    output_path = Path(args.output)
+    template_path = Path(args.template)
 
-    count = convert_txt_to_excel(txt_path, template_path, output_path, start_row=args.start_row)
-    print(f"已写入 {count} 条文案到 {output_path}。")
+    count = convert_txt_to_excel(txt_path, template_path, start_row=args.start_row)
+    print(f"已写入 {count} 条文案到 {template_path}。")
 
 
-def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no cover - GUI 难以自动化测试
+def run_gui() -> None:  # pragma: no cover - GUI 难以自动化测试
     if tk is None:
         raise SystemExit("当前环境不支持 Tkinter 图形界面，请改用命令行参数运行。")
-
-    default_template = ensure_default_template_file(default_template)
 
     root = tk.Tk()
     root.title("TXT 文案转 Excel 工具")
@@ -139,7 +128,7 @@ def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no co
 
     # 选择模板
     ttk.Label(mainframe, text="Excel 模板：").grid(column=0, row=1, sticky="w", padx=(0, 8), pady=(8, 0))
-    template_var = tk.StringVar(value=str(default_template))
+    template_var = tk.StringVar()
     template_entry = ttk.Entry(mainframe, width=48, textvariable=template_var)
     template_entry.grid(column=1, row=1, sticky="ew", pady=(8, 0))
 
@@ -150,37 +139,16 @@ def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no co
 
     ttk.Button(mainframe, text="浏览...", command=choose_template).grid(column=2, row=1, padx=(8, 0), pady=(8, 0))
 
-    # 输出路径
-    ttk.Label(mainframe, text="输出文件：").grid(column=0, row=2, sticky="w", padx=(0, 8), pady=(8, 0))
-    output_var = tk.StringVar()
-    output_entry = ttk.Entry(mainframe, width=48, textvariable=output_var)
-    output_entry.grid(column=1, row=2, sticky="ew", pady=(8, 0))
-
-    def choose_output() -> None:
-        path = filedialog.asksaveasfilename(
-            title="保存 Excel 文件",
-            defaultextension=".xlsx",
-            filetypes=[("Excel 文件", "*.xlsx"), ("所有文件", "*.*")],
-        )
-        if path:
-            output_var.set(path)
-
-    ttk.Button(mainframe, text="浏览...", command=choose_output).grid(column=2, row=2, padx=(8, 0), pady=(8, 0))
-
     status_var = tk.StringVar()
     status_label = ttk.Label(mainframe, textvariable=status_var, foreground="#666666")
     status_label.grid(column=0, row=3, columnspan=3, sticky="w", pady=(12, 0))
 
     def run_conversion() -> None:
         txt_value = txt_var.get().strip()
-        output_value = output_var.get().strip()
         template_value = template_var.get().strip()
 
         if not txt_value:
             messagebox.showwarning("提示", "请先选择 TXT 文案文件。")
-            return
-        if not output_value:
-            messagebox.showwarning("提示", "请选择 Excel 输出位置。")
             return
 
         txt_file = Path(txt_value)
@@ -188,22 +156,24 @@ def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no co
             messagebox.showerror("文件不存在", f"未找到 TXT 文件：{txt_file}")
             return
 
-        template_file = Path(template_value) if template_value else ensure_default_template_file(default_template)
+        if not template_value:
+            messagebox.showwarning("提示", "请先选择 Excel 模板。")
+            return
+
+        template_file = Path(template_value)
         if not template_file.is_file():
             messagebox.showerror("文件不存在", f"未找到 Excel 模板：{template_file}")
             return
 
-        output_file = Path(output_value)
-
         try:
-            count = convert_txt_to_excel(txt_file, template_file, output_file)
+            count = convert_txt_to_excel(txt_file, template_file)
         except Exception as exc:  # pylint: disable=broad-except
             messagebox.showerror("转换失败", str(exc))
             status_var.set("")
             return
 
         messagebox.showinfo("转换完成", f"成功写入 {count} 条文案。")
-        status_var.set(f"输出文件：{output_file}")
+        status_var.set(f"已更新模板：{template_file}")
 
     action_frame = ttk.Frame(mainframe)
     action_frame.grid(column=0, row=4, columnspan=3, pady=(16, 0))
@@ -216,23 +186,22 @@ def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no co
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TXT 文案转 Excel 工具")
     parser.add_argument("--txt", help="需要转换的 TXT 文件路径")
-    parser.add_argument("--template", help="Excel 模板路径，默认为仓库内置模板", default=None)
-    parser.add_argument("--output", help="输出 Excel 文件路径")
+    parser.add_argument("--template", help="Excel 模板路径", default=None)
     parser.add_argument("--start-row", type=int, default=2, help="在 Excel 中写入的起始行，默认为 2")
     parser.add_argument("--gui", action="store_true", help="强制启动图形界面")
 
     args = parser.parse_args(argv)
 
-    provided_cli = any(
-        value is not None for value in (args.txt, args.output, args.template)
-    ) or args.start_row != parser.get_default("start_row")
+    provided_cli = any(value is not None for value in (args.txt, args.template)) or (
+        args.start_row != parser.get_default("start_row")
+    )
 
     if args.gui or not provided_cli:
         args.gui = True
         return args
 
-    if not args.txt or not args.output:
-        parser.error("命令行模式下必须同时提供 --txt 与 --output 参数，或使用 --gui 启动图形界面。")
+    if not args.txt or not args.template:
+        parser.error("命令行模式下必须同时提供 --txt 与 --template 参数，或使用 --gui 启动图形界面。")
 
     return args
 
