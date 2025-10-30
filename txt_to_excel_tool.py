@@ -170,16 +170,28 @@ def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no co
     status_label.grid(column=0, row=3, columnspan=3, sticky="w", pady=(12, 0))
 
     def run_conversion() -> None:
-        txt_file = Path(txt_var.get().strip())
-        template_file = Path(template_var.get().strip())
-        output_file = Path(output_var.get().strip())
+        txt_value = txt_var.get().strip()
+        output_value = output_var.get().strip()
+        template_value = template_var.get().strip()
 
-        if not txt_file:
+        if not txt_value:
             messagebox.showwarning("提示", "请先选择 TXT 文案文件。")
             return
-        if not output_file:
+        if not output_value:
             messagebox.showwarning("提示", "请选择 Excel 输出位置。")
             return
+
+        txt_file = Path(txt_value)
+        if not txt_file.is_file():
+            messagebox.showerror("文件不存在", f"未找到 TXT 文件：{txt_file}")
+            return
+
+        template_file = Path(template_value) if template_value else ensure_default_template_file(default_template)
+        if not template_file.is_file():
+            messagebox.showerror("文件不存在", f"未找到 Excel 模板：{template_file}")
+            return
+
+        output_file = Path(output_value)
 
         try:
             count = convert_txt_to_excel(txt_file, template_file, output_file)
