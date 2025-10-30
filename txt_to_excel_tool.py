@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 try:
     import tkinter as tk
@@ -30,7 +30,7 @@ CHINESE_COMMA = "，"
 DEFAULT_TEMPLATE = Path(__file__).with_name("templates").joinpath(DEFAULT_TEMPLATE_FILENAME)
 
 
-def extract_units(lines: Iterable[str]) -> List[str]:
+def extract_units(lines: Iterable[str]) -> list[str]:
     """根据需求文档的规则将原始行列表整理成文案单元列表。
 
     - 文案中的换行需要替换成中文逗号进行连接；
@@ -38,8 +38,8 @@ def extract_units(lines: Iterable[str]) -> List[str]:
     - 连续空行会被忽略，只作为一次分隔处理。
     """
 
-    units: List[str] = []
-    current: List[str] = []
+    units: list[str] = []
+    current: list[str] = []
 
     for raw_line in lines:
         # 使用 rstrip 去掉末尾的换行符，同时保留中间的空格和中文字符
@@ -213,7 +213,7 @@ def run_gui(default_template: Path = DEFAULT_TEMPLATE) -> None:  # pragma: no co
     root.mainloop()
 
 
-def parse_args(argv: List[str]) -> argparse.Namespace:
+def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TXT 文案转 Excel 工具")
     parser.add_argument("--txt", help="需要转换的 TXT 文件路径")
     parser.add_argument("--template", help="Excel 模板路径，默认为仓库内置模板", default=None)
@@ -223,25 +223,21 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
     args = parser.parse_args(argv)
 
-    if args.gui:
+    provided_cli = any(
+        value is not None for value in (args.txt, args.output, args.template)
+    ) or args.start_row != parser.get_default("start_row")
+
+    if args.gui or not provided_cli:
+        args.gui = True
         return args
 
-    if args.txt and args.output:
-        return args
-
-    provided_any = any(
-        value is not None
-        for value in (args.txt, args.output, args.template)
-    ) or args.start_row != 2
-
-    if provided_any:
+    if not args.txt or not args.output:
         parser.error("命令行模式下必须同时提供 --txt 与 --output 参数，或使用 --gui 启动图形界面。")
 
-    args.gui = True
     return args
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: Optional[list[str]] = None) -> None:
     args = parse_args(argv or sys.argv[1:])
     if args.gui:
         run_gui()

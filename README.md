@@ -22,8 +22,7 @@
    ```
 
 工具内置了一个简单的 Excel 模板，会在第一次运行时自动生成到
-`templates/txt_to_excel_template.xlsx`。你也可以通过运行
-`python -m templates` 将模板导出到任意位置，或者替换成自定义的模板。
+`templates/txt_to_excel_template.xlsx`，也可以直接替换成自定义模板。
 
 ## 图形界面使用方法
 

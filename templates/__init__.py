@@ -1,14 +1,7 @@
-"""Utilities for accessing the built-in Excel template.
-
-This module exposes helpers to decode the default template that ships with the
-project.  The actual template bytes are stored as a Base64 string so that the
-repository remains text-only and can be committed without binary diffs.
-"""
+"""Helpers for accessing the built-in Excel template."""
 from __future__ import annotations
 
-import argparse
 import base64
-from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
@@ -84,12 +77,6 @@ def default_template_bytes() -> bytes:
     return base64.b64decode(DEFAULT_TEMPLATE_B64)
 
 
-def default_template_stream() -> BytesIO:
-    """Return a BytesIO handle for the built-in template."""
-
-    return BytesIO(default_template_bytes())
-
-
 def ensure_default_template_file(path: Optional[Path] = None) -> Path:
     """Ensure the default template exists on disk and return its path.
 
@@ -106,34 +93,3 @@ def ensure_default_template_file(path: Optional[Path] = None) -> Path:
         path.write_bytes(default_template_bytes())
 
     return path
-
-
-def export_default_template(destination: Path) -> Path:
-    """Export the built-in template to an arbitrary location."""
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(default_template_bytes())
-    return destination
-
-
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Export the built-in Excel template")
-    parser.add_argument(
-        "destination",
-        nargs="?",
-        type=Path,
-        default=Path.cwd() / DEFAULT_TEMPLATE_FILENAME,
-        help="导出模板的目标路径，默认为当前目录",
-    )
-    return parser
-
-
-def main(argv: Optional[list[str]] = None) -> None:
-    parser = _build_parser()
-    args = parser.parse_args(argv)
-    path = export_default_template(args.destination)
-    print(f"模板已导出到 {path}")
-
-
-if __name__ == "__main__":  # pragma: no cover - 命令行工具
-    main()
