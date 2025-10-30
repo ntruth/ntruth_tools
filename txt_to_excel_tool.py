@@ -58,7 +58,9 @@ def extract_units(lines: Iterable[str]) -> List[str]:
     return units
 
 
-def convert_txt_to_excel(txt_path: Path, template_path: Path, output_path: Path, *, start_row: int = 1) -> int:
+def convert_txt_to_excel(
+    txt_path: Path, template_path: Path, output_path: Path, *, start_row: int = 2
+) -> int:
     """将 TXT 文案转换并写入 Excel。
 
     返回写入的文案单元数量。
@@ -216,7 +218,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("--txt", help="需要转换的 TXT 文件路径")
     parser.add_argument("--template", help="Excel 模板路径，默认为仓库内置模板", default=None)
     parser.add_argument("--output", help="输出 Excel 文件路径")
-    parser.add_argument("--start-row", type=int, default=1, help="在 Excel 中写入的起始行，默认为 1")
+    parser.add_argument("--start-row", type=int, default=2, help="在 Excel 中写入的起始行，默认为 2")
     parser.add_argument("--gui", action="store_true", help="强制启动图形界面")
 
     args = parser.parse_args(argv)
@@ -230,7 +232,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     provided_any = any(
         value is not None
         for value in (args.txt, args.output, args.template)
-    ) or args.start_row != 1
+    ) or args.start_row != 2
 
     if provided_any:
         parser.error("命令行模式下必须同时提供 --txt 与 --output 参数，或使用 --gui 启动图形界面。")

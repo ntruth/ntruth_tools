@@ -43,7 +43,7 @@ python txt_to_excel_tool.py --txt 输入.txt --output 输出.xlsx
 可选参数：
 
 - `--template`：指定自定义的 Excel 模板路径，默认使用仓库内置模板。
-- `--start-row`：设置写入 Excel 的起始行（默认为 1）。
+- `--start-row`：设置写入 Excel 的起始行（默认为 2）。
 
 示例：
 
